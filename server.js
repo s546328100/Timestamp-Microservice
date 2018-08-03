@@ -1,8 +1,7 @@
 const express = require('express');
 let moment = require('moment');
-let os = require('os');
+const http = require('http');
 
-let ip = showObj(os.networkInterfaces());
 let port = process.argv[2] || 3000;
 
 let app = express();
@@ -10,7 +9,19 @@ let app = express();
 app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-    res.render('index', {home: `${ip}:${port}`});
+    http.get('http://ifconfig.me/ip', res1 => {
+        res1.setEncoding('utf8');
+        let rawData = '';
+        res1.on('data', chunk => {
+            rawData += chunk;
+        });
+        res1.on('end', () => {
+            console.log(rawData);
+            res.render('index', {home: `${rawData}:${port}`});
+        });
+    }).on('error', e => {
+        return res.send(e);
+    });
 });
 
 app.get('/:id', (req, res) => {
@@ -33,17 +44,5 @@ app.get('/:id', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log('访问地址为 http://%s:%s', ip, port);
+    console.log('listen to port: %s', port);
 });
-
-function showObj(obj) {
-    for (let devName in obj) {
-        let iface = obj[devName];
-        for (let i = 0; i < iface.length; i++) {
-            let alias = iface[i];
-            if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
-                return alias.address;
-            }
-        }
-    }
-}
