@@ -9,13 +9,14 @@ let app = express();
 app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-    http.get('http://ifconfig.me/ip', res1 => {
+    http.get('http://members.3322.org/dyndns/getip', res1 => {
         res1.setEncoding('utf8');
         let rawData = '';
         res1.on('data', chunk => {
             rawData += chunk;
         });
         res1.on('end', () => {
+            rawData = rawData.trim();
             console.log(rawData);
             res.render('index', {home: `${rawData}:${port}`});
         });
